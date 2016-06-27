@@ -1,0 +1,25 @@
+@charset "utf-8";
+/* CSS Document */
+body {
+	background-color: #f5f5f5; margin: 0 auto;
+	padding: 0px;
+	text-align: center;
+	min-width: 1000px; 
+	font-size:90%;
+	color: #555;
+}
+h1 {font: normal 25px/28px arial,sans-serif; color: #333; }
+#login {background-color: #fff; padding: 20px;  margin:0 auto; margin-top: 50px; width: 480px; text-align: center; border: #e8e8e8 1px solid;}
+.white { color: #fff;}
+p, div, table {	font: normal 1em/1.4em Arial, Helvetica, sans-serif; margin:0; padding:2px 0 2px 0; }
+a, a:visited, a:active { color: #666666; text-decoration: none;}
+a:hover {color: #FF3300;text-decoration: underline;}
+#authMessage  {
+	width: 	auto;
+	background-color: #FE7976;
+	margin: 3px 0px; padding: 3px 10px;
+	color: #FFF; font-weight: bold;
+	border-radius: 6px;
+}
+
+

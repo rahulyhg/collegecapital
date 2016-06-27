@@ -1,0 +1,37 @@
+RewriteEngine on
+#RewriteLogLevel 5
+#LogLevel debug
+RewriteBase /
+
+RewriteCond %{HTTP_HOST} !^www\.
+RewriteRule ^(.*)$ http://www.%{HTTP_HOST}/$1 [R=301,L]
+
+# (301 redirects)
+
+# Rewrite rules (standard)
+RewriteRule ^networksearch/([^/]+)$ networksearch.php?paramName=$1 [QSA,NC,L]
+RewriteRule ^networksearch$ networksearch.php [QSA,NC,L]
+#RewriteRule ^network/([^/]+)$ network.php?paramName=$1 [QSA,NC,L]
+#RewriteRule ^network$ network.php [QSA,NC,L]
+RewriteRule ^contact$ contact.php [QSA,NC,L]
+RewriteRule ^about$ about.php [QSA,NC,L]
+RewriteRule ^people$ people.php [QSA,NC,L]
+#RewriteRule ^testimonials/([^/]+)/([^/]+)$ testimonials.php?cat=$1&title=$2 [QSA,NC,L]
+#RewriteRule ^testimonials/([^/]+)$ testimonials.php?cat=$1 [QSA,NC,L]
+#RewriteRule ^testimonials$ testimonials.php [QSA,NC,L]
+#RewriteRule ^pages/([^/]+)/([^/]+)$ page.php?cat=$1&seo_url=$2 [QSA,NC,L]
+#RewriteRule ^pages$ page.php [QSA,NC,L]
+#RewriteRule ^news/([^/]+)/([^/]+)$ news.php?cat=$1&title=$2 [QSA,NC,L]
+#RewriteRule ^news/([^/]+)$ news.php?cat=$1 [QSA,NC,L]
+#RewriteRule ^news$ news.php [QSA,NC,L]
+#RewriteRule ^archived-news/([^/]+)/([^/]+)$ archived-news.php?arc=$1&title=$2 [QSA,NC,L]
+#RewriteRule ^archived-news/([^/]+)$ archived-news.php?arc=$1 [QSA,NC,L]
+#RewriteRule ^archived-news$ archived-news.php [QSA,NC,L]
+#RewriteRule ^useful-tools-for-employers/([^/]+)$ tools-form.php?doc=$1 [QSA,NC,L]
+#RewriteRule ^useful-tools-for-employers$ tools-form.php [QSA,NC,L]
+#RewriteRule ^privacy$ privacy.php [QSA,NC,L]
+
+DirectoryIndex index.php
+
+ErrorDocument 400 /404.php
+ErrorDocument 404 /404.php

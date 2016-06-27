@@ -1,0 +1,44 @@
+body { font-family: Helvetica, Arial, sans-serif;
+   background: white;
+   font-size: 11pt;
+   }
+
+#bandWrapper, #navWrapper,  #footerWrapper,  #form, #toggle, .side-menu, .tick {display: none;}
+
+#logo {float: none; width: 150px; padding: 0; margin: 0;}
+#phone { float: none; padding: 0; margin: 0; }
+#head {height: 200px;}
+
+#content, #col-right, #col-left, div {
+   width: 100% !important;
+   margin: 0;
+   padding: 0;
+   border: 0;
+   float: none !important;
+   color: black;
+   background: transparent none;
+   border: none;
+   }
+     
+ #contentWrapper { background: transparent none;}
+
+a:link, a:visited {
+   color: #CCCC00;
+   background: transparent;
+   font-weight: bold;
+   text-decoration: underline;
+   }
+   
+/* a:after {
+    content: " (" attr(href) ") ";
+} */
+  
+h1 { font-size: 18px;
+	font-weight: bold;
+	color: #01B1AF; }
+	
+table { width: 100%;
+padding: 5px;
+border: 0;
+page-break-inside: avoid;}
+	

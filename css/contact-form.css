@@ -1,0 +1,80 @@
+/* CSS Document */
+
+
+#registration {   color: #333;}
+
+#registration a { color: #c4d93a;}
+	  
+fieldset { border: none; margin: 0px; padding: 0px;}
+
+.field-label { float: left; width: 20%; margin: 5px 0 10px 0;}
+.field { float: left; position: relative; width: 70%; padding: 0; margin: 0 0 10px 0;}
+
+.login-label { float: left; width: 25%; margin: 5px 0 10px 0;}
+.login { float: left; position: relative; width: 65%; padding: 0; margin: 0 0 10px 0;}
+
+input.text, input, select {	 
+      -webkit-border-radius: 6px;
+      -moz-border-radius: 6px;
+      border-radius: 6px;
+      border:solid 1px #ccc;
+      font-size: 12px;
+
+      padding: 6px 8px 6px 8px;
+      -moz-box-shadow: 0px 1px 0px #cccccc;
+      -webkit-box-shadow: 0px 1px 0px #cccccc;
+      color:#333;
+
+}
+input.text, input, textarea {	width: 87%;}
+select {width: 91%; }
+
+input.secure {
+      -webkit-border-radius: 6px;
+      -moz-border-radius: 6px;
+      border-radius: 6px;
+      border:solid 1px #ccc;
+      font-size: 12px;
+      width: 40%;
+      padding: 6px 8px 6px 8px;
+      -moz-box-shadow: 0px 1px 0px #cccccc;
+      -webkit-box-shadow: 0px 1px 0px #cccccc;	  
+	  color:#333;
+}	  
+
+textarea {
+      -webkit-border-radius: 6px;
+      -moz-border-radius: 6px;
+      border-radius: 6px;
+      border:solid 1px #ccc;
+      font-size: 12px;
+	 height: 4%;
+      padding: 6px 8px 6px 8px;
+      -moz-box-shadow: 0px 1px 0px #cccccc;
+      -webkit-box-shadow: 0px 1px 0px #cccccc;
+	  color:#333;
+}
+
+	
+#registration.side-form p { position: relative;}
+
+
+
+	
+fieldset label.infield /* .infield label added by JS */ {
+	 font-family:Arial,Helvetica,sans-serif!important;
+	 font-size: 12px;
+    color: #999;
+    position: absolute;
+    text-align: left;
+    top: 0px !important;
+    left: 10px !important;
+    line-height: 29px;
+    }
+	
+
+/******** For server side error messages ******/
+#RegisterUserForm .error,.error {
+	color: red;
+    font-size: 0.9em;
+}

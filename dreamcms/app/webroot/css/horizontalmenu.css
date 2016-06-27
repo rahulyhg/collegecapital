@@ -1,0 +1,116 @@
+.horizontalcssmenu ul{
+	float: left;
+margin: 0;
+padding: 0;
+list-style-type: none;
+z-index: 999999 !important;
+
+}
+
+/*Top level list items*/
+.horizontalcssmenu ul li{
+position: relative;
+display: inline;
+float: left;
+top: 10px;
+margin: 0px;
+padding: 0;
+background: none;}
+
+
+/*Top level menu link items style*/
+.horizontalcssmenu ul li a, .horizontalcssmenu ul li a:active, .horizontalcssmenu ul li a:visited{
+display: block;
+padding: 5px 8px;
+margin: 0px 7px 0 0; /*Space between top level menu link items*/
+text-decoration: none;
+font-size: 12px; font-weight: bold; line-height: 110%;
+text-transform: uppercase;
+text-align:left;
+
+}
+
+
+	
+/*Sub level menu*/
+.horizontalcssmenu ul li ul{
+margin: 0; 
+padding: 0px;/* add for space between menu and submenu*/
+position: absolute;
+display: block;
+visibility: hidden;
+z-index: 100;
+
+}
+
+
+/*Sub level menu list items*/
+.horizontalcssmenu ul li ul li{ 
+display: inline;
+float: none;
+border: 0;
+height: 1%;
+ }
+
+
+/* Sub level menu links style */
+.horizontalcssmenu ul li ul li a, .horizontalcssmenu ul li ul li a:active, .horizontalcssmenu ul li ul li a:visited{
+width: 140px; /*width of sub menu levels*/
+padding: 7px !important;
+background: #F2F6F6;
+font-size: 12px;
+font-weight: normal!important;
+text-transform: none;
+color: #666 !important;
+text-align:left;
+margin: 0px; /* must be 0 for ie9 */
+border: 1px solid #DCE7E7; 
+  -webkit-border-radius: 4px!important;
+  -moz-border-radius: 4px!important;
+  border-radius: 4px!important;
+
+}
+
+.horizontalcssmenu ul li ul li a:hover{
+background: #DCE7E7!important; color: #333;
+}
+
+.horizontalcssmenu .arrowdiv{
+position: absolute;
+right: 0px;
+display: none;
+}
+
+/*Sub sub level menu list items - child - IE adjustments made in header.php*/
+.horizontalcssmenu ul li ul li ul{
+ position: absolute; margin-top: -38px; left: 150px; z-index:210; }
+ 
+ @-moz-document url-prefix() { /*for firefox only*/
+  .horizontalcssmenu ul li ul li ul {
+     margin-top: -26px; }
+}
+ 
+ /* Sub sub level menu links style - child */
+.horizontalcssmenu ul li ul li ul li a, .horizontalcssmenu ul li ul li ul li a:active, .horizontalcssmenu ul li ul li ul li a:visited{
+width: 140px; /*width of sub menu levels*/
+padding: 7px !important;
+background: #F2F6F6!important;
+font: normal 12px/12px  Tahoma, Geneva, sans-serif!important;
+color: #333 !important;
+text-align:left;
+margin: 0px; /* must be 0 for ie9 */
+border: 1px solid #DCE7E7; 
+  -webkit-border-radius: 4px!important;
+  -moz-border-radius: 4px!important;
+  border-radius: 4px!important; 
+}
+
+.horizontalcssmenu ul li ul li ul li a:hover{
+background: #DCE7E7!important; color: #333!important;
+  -webkit-border-radius: 4px!important;
+  -moz-border-radius: 4px!important;
+  border-radius: 4px!important;
+}	
+/* Holly Hack for IE \
+* html .horizontalcssmenu ul li { float: left; height: 1%; }
+* html .horizontalcssmenu ul li a { height: 1%; }*/

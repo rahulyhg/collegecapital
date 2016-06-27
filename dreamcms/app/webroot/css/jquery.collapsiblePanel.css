@@ -1,0 +1,30 @@
+/* CSS Document */
+
+
+.collapsibleContainer
+{
+    /*border: solid 1px #9BB5C1;*/
+	margin:0 0 20px 0; padding:5px 10px 30px 0; border-bottom: 1px #e8e8e8 solid;
+}
+
+.collapsibleContainerTitle
+{
+    cursor:pointer;
+}
+
+.collapsibleContainerTitle div
+{
+    padding-top:5px;
+    padding-left:0px;
+    background-color:#FFF;
+    color: #999999;
+    font: bold 13px/18px arial,sans-serif;
+    margin: 0;
+    padding: 10px 0 5px;
+    text-transform: uppercase;
+}
+
+.collapsibleContainerContent
+{
+    padding: 0px;
+}

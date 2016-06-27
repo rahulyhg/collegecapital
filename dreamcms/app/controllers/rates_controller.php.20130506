@@ -1,0 +1,363 @@
+<?php
+class RatesController extends AppController {
+
+	var $name = 'Rates';
+	var $components = array('JQValidator.JQValidator','RSS','Email');
+	var $helpers = array('Form', 'Html', 'Javascript', 'Time', 'FormatEpochToDate', 'CustomDisplayFunctions','JQValidator.JQValidator');
+	
+	function index() {
+		if($_SESSION['Auth']['User']['group_id']==2 || $_SESSION['Auth']['User']['group_id']==3){
+			$this->redirect(array('controller'=>'rates','action'=>'view'));
+		} else {	
+			//only admin and banks can upload rate sheets		
+			$this->Rate->recursive = 0;		
+			$recordCount = $this->Rate->find('count');
+			if($_SESSION['Auth']['User']['group_id']==1){ //show all for admins
+				$conditionsArray = "";
+				$conditionsStr = "";
+			} else { //show only those docs that belongs to banks
+				$conditionsArray = array('Rate.cms_user_id = '.$_SESSION['Auth']['User']['id']);
+				$conditionsStr = "Rate.cms_user_id = ".$_SESSION['Auth']['User']['id']." AND ";
+			}
+			
+			if(isset($_GET['sel'])){
+				if(trim($_GET['sel']=='all')){	
+					$this->paginate = Set::merge($this->paginate,array('Rate'=>array('conditions' => $conditionsArray, 'order' => array('Rate.documentDate' => 'DESC'), 'limit' => $recordCount)));
+				} else {
+					//find total count of records
+					$recordCount = $this->Rate->find('count',array('conditions' => array($conditionsStr.'Rate.title LIKE' => ''.trim($_GET['sel']).'%')));
+					$this->paginate = Set::merge($this->paginate,array('Rate'=>array('conditions' => array($conditionsStr.'Rate.title LIKE' => ''.trim($_GET['sel']).'%'), 'limit' => $recordCount)));
+				}
+			} elseif(isset($_GET['group'])){
+				if((int)trim($_GET['group'])>0){
+					$recordCount = $this->Rate->find('count',array('conditions' => array($conditionsStr.'Rate.category_id =' => (int)trim($_GET['group']))));
+					$this->paginate = Set::merge($this->paginate,array('Rate'=>array('conditions' => array($conditionsStr.'Rate.category_id =' => (int)trim($_GET['group'])), 'limit' => $recordCount)));
+				}
+			} elseif(isset($_GET['search'])){
+				//find total count of records
+				$recordCount = $this->Rate->find('count',array('conditions' => array($conditionsStr.'Rate.title LIKE' => '%'.trim($_GET['search']).'%')));
+				$this->paginate = Set::merge($this->paginate,array('Rate'=>array('conditions' => array($conditionsStr.'Rate.title LIKE' => '%'.trim($_GET['search']).'%'), 'limit' => $recordCount)));
+			} else {			
+				$this->paginate = Set::merge($this->paginate,array('Rate'=>array('conditions' => $conditionsArray, 'order' => array('Rate.documentDate' => 'DESC'), 'limit' => $recordCount)));
+			}
+			$this->set('rates', $this->paginate());		
+			$pageLimit = 20;
+			$this->set('pageLimit',$pageLimit);
+			
+			$this->loadModel('RatesCategory');
+			$this->set('options', $this->RatesCategory->find('all'));
+			
+			$moduleHeading = 'Rates';
+			$this->set('moduleHeading',$moduleHeading);
+			$this->set('moduleAction','Manage');
+			$this->set('helpURL','rates');
+			//layout options
+			$this->set('overview', true);
+			$this->set('manage', true);
+			$this->set('removeBanner', false);
+			$this->set('removeSideMenu', false);
+			$this->set('fullWidth', false);
+		}
+	}
+
+	function view() { //no id required as a parameter
+		//everyone can view rate sheets
+		if ($_SESSION['Auth']['User']['group_id']==1){
+			//admins can view all documents uploaded to date and can filter it based on banks
+			if(isset($_GET['group']) && (int)trim($_GET['group'])>0){
+				$this->set('rates',$this->Rate->find('all', array(
+					'joins' => array(
+						array(
+							'table' => 'users',
+							'alias' => 'UserJoin',
+							'type' => 'INNER',
+							'conditions' => array(
+								'UserJoin.id = Rate.cms_user_id'
+							)
+						)
+					),
+					'conditions' => array(
+						'Rate.live' => 1,
+						'Rate.cms_user_id = '=>(int)trim($_GET['group'])
+					),
+					'fields' => array('UserJoin.*', 'Rate.*'),
+					'order' => array('Rate.documentDate' => 'DESC')
+				)));
+			} else {				
+				$this->set('rates', $this->Rate->find('all', array(
+					'joins' => array(
+						array(
+							'table' => 'users',
+							'alias' => 'UserJoin',
+							'type' => 'INNER',
+							'conditions' => array(
+								'UserJoin.id = Rate.cms_user_id'
+							)
+						)
+					),
+					'conditions' => array(
+						'Rate.live' => 1
+					),
+					'fields' => array('UserJoin.*', 'Rate.*'),
+					'order' => array('Rate.documentDate' => 'DESC')
+				)));
+			}
+			//load all bankers
+			$this->loadModel('Users');
+			$this->set('banks',$this->Users->find('all', array('conditions' => array('Users.group_id = 4'))));
+		} elseif ($_SESSION['Auth']['User']['group_id']==4) {
+			//banks can only see the documents uploaded by them			
+			$this->set('rates', $this->Rate->find('all', array(
+				'joins' => array(
+					array(
+						'table' => 'users',
+						'alias' => 'UserJoin',
+						'type' => 'INNER',
+						'conditions' => array(
+							'UserJoin.id = Rate.cms_user_id'
+						)
+					)
+				),
+				'conditions' => array(
+					'Rate.live' => 1,
+					'Rate.cms_user_id = '=>(int)$_SESSION['Auth']['User']['id']
+				),
+				'fields' => array('UserJoin.*', 'Rate.*'),
+				'order' => array('Rate.documentDate' => 'DESC')
+			)));
+		} else {			
+			//first get all dictinct cms_user_ids
+			$bankIDs = $this->Rate->find('all', array('fields' => 'Rate.cms_user_id','group' => 'Rate.cms_user_id'));
+			//now iterate through each id to find the top interest rate ids
+			$implodedIDs = ""; $count = 0;
+			foreach($bankIDs as $bankID):
+				$rateIDs[$count] = $this->Rate->find('first', array(
+					'fields' => array('Rate.id'),
+					'conditions' => array('Rate.cms_user_id = '.$bankID['Rate']['cms_user_id']),
+					'order' => array('Rate.documentDate' => 'DESC')
+				));
+				$count++;
+			endforeach;
+			
+			for($i=0; $i<$count; $i++){				
+				$implodedIDs .= $rateIDs[$i]['Rate']['id'].',';
+			}
+			
+			//remove last comma
+			$implodedIDs = substr($implodedIDs, 0, -1);
+			
+			$this->set('rates', $this->Rate->find('all', array(
+					'joins' => array(
+						array(
+							'table' => 'users',
+							'alias' => 'UserJoin',
+							'type' => 'INNER',
+							'conditions' => array(
+								'UserJoin.id = Rate.cms_user_id'
+							)
+						)
+					),
+					'conditions' => array(
+						'Rate.live' => 1,
+						'Rate.id IN ('.$implodedIDs.')'
+					),
+					'fields' => array('UserJoin.*', 'Rate.*'),
+					'order' => array('Rate.documentDate' => 'DESC')					
+				)));
+		}
+		
+		$pageLimit = 20;
+		$this->set('pageLimit',$pageLimit);
+			
+		$moduleHeading = 'Rates';
+		$this->set('moduleHeading',$moduleHeading);
+		$this->set('moduleAction','View');
+		$this->set('helpURL','rates');
+		
+		//layout options
+		$this->set('overview', true);
+		if($_SESSION['Auth']['User']['group_id']==1 || $_SESSION['Auth']['User']['group_id']==4){
+			$this->set('manage', true);
+		}
+		$this->set('removeBanner', false);
+		$this->set('removeSideMenu', false);
+		$this->set('fullWidth', false);
+	}
+	
+	function preview($id = null) {
+		if($_SESSION['Auth']['User']['group_id']==2 || $_SESSION['Auth']['User']['group_id']==3){
+			$this->redirect(array('controller'=>'rates','action'=>'view'));
+		} else {			
+			if (!$id) {
+				$this->flash(__('Invalid rates', true), array('action' => 'index'));
+			}
+			$this->set('rate', $this->Rate->read(null, $id));
+			$moduleHeading = 'Rates';
+			$this->set('moduleHeading',$moduleHeading);
+			$this->set('moduleAction','Preview');
+			$this->set('page', 'rates');
+			$this->set('helpURL','rates');
+			//layout options
+			$this->set('overview', true);
+			$this->set('manage', true);
+			$this->set('removeBanner', false);
+			$this->set('removeSideMenu', false);
+			$this->set('fullWidth', false);
+		}
+	}
+
+	function add() {
+		if($_SESSION['Auth']['User']['group_id']==2 || $_SESSION['Auth']['User']['group_id']==3){
+			$this->redirect(array('controller'=>'rates','action'=>'view'));
+		} else {			
+			if (!empty($this->data)) {
+				$this->Rate->create();
+				if ($this->Rate->save($this->data)) {
+					$this->flash(__('Rate saved.', true), array('action' => 'index'));
+				} else {
+				}
+			}
+			$this->layout='add-edit';
+			$ckeditorClass = '';
+			$this->set('ckeditorClass', $ckeditorClass);
+			$ckfinderPath = Configure::read('Company.wysiwyg').'app/webroot/js/ckfinder/';
+			$this->set('ckfinderPath', $ckfinderPath);
+			$this->loadModel('RatesCategory'); //if it's not already loaded
+			$options = $this->RatesCategory->find('all'); //or whatever conditions you want	
+			$this->set('options',$options);
+			
+			//load all bankers
+			$this->loadModel('Users');
+			$this->set('banks',$this->Users->find('all', array('conditions' => array('Users.group_id = 4'))));
+			
+			$moduleHeading = 'Rates';
+			$this->set('moduleHeading',$moduleHeading);
+			$this->set('moduleAction','Add');
+			$this->set('helpURL','rates');		
+			//javascript validations
+			$this->JQValidator->addValidation
+			(
+				'Rate',
+				$this->Rate->validate,
+				__('Save failed, fix the following errors:', true),
+				'RateAddForm'
+			);
+			//layout options
+			$this->set('overview', true);
+			$this->set('manage', true);
+			$this->set('removeBanner', false);
+			$this->set('removeSideMenu', false);
+			$this->set('fullWidth', false);
+		}
+	}
+
+	function edit($id = null) {
+		if($_SESSION['Auth']['User']['group_id']==2 || $_SESSION['Auth']['User']['group_id']==3){
+			$this->redirect(array('controller'=>'rates','action'=>'view'));
+		} else {			
+			if (!$id && empty($this->data)) {
+				$this->flash(sprintf(__('Invalid rates', true)), array('action' => 'index'));
+			}
+			if (!empty($this->data)) {
+				if ($this->Rate->save($this->data)) {
+					$this->flash(__('The rates has been saved.', true), array('action' => 'index'));
+				} else {
+				}
+			}
+			if (empty($this->data)) {
+				$this->data = $this->Rate->read(null, $id);
+			}
+			$this->layout='add-edit';
+			$ckeditorClass = '';
+			$this->set('ckeditorClass', $ckeditorClass);
+			$ckfinderPath = Configure::read('Company.wysiwyg').'app/webroot/js/ckfinder/';
+			$this->set('ckfinderPath', $ckfinderPath);
+			
+			$this->loadModel('RatesCategory'); //if it's not already loaded
+			$options = $this->RatesCategory->find('all'); //or whatever conditions you want
+			$this->set('options',$options);			
+			
+			//load all bankers
+			$this->loadModel('Users');
+			$this->set('banks',$this->Users->find('all', array('conditions' => array('Users.group_id = 4'))));
+			
+			$moduleHeading = 'Rates Items';
+			$this->set('moduleHeading',$moduleHeading);
+			$this->set('moduleAction','Edit');
+			$this->set('helpURL','rates');		
+			//javascript validations
+			$this->JQValidator->addValidation
+			(
+				'Rate',
+				$this->Rate->validate,
+				__('Save failed, fix the following errors:', true),
+				'RateEditForm'
+			);	
+			//layout options
+			$this->set('overview', true);
+			$this->set('manage', true);
+			$this->set('removeBanner', false);
+			$this->set('removeSideMenu', false);
+			$this->set('fullWidth', false);
+		}
+	}
+
+	function delete($id = null) {
+		if($_SESSION['Auth']['User']['group_id']==2 || $_SESSION['Auth']['User']['group_id']==3){
+			$this->redirect(array('controller'=>'rates','action'=>'view'));
+		} else {			
+			if (!$id) {
+				$this->flash(sprintf(__('Invalid rates', true)), array('action' => 'index'));
+			}
+			if ($this->Rate->delete($id)) {
+				$this->flash(__('Rates deleted', true), array('action' => 'index'));
+			}
+			$this->flash(__('Rates was not deleted', true), array('action' => 'index'));
+			$this->redirect(array('action' => 'index'));
+		}
+	}
+	
+	function publish($id = null) {
+		if($_SESSION['Auth']['User']['group_id']==2 || $_SESSION['Auth']['User']['group_id']==3){
+			$this->redirect(array('controller'=>'rates','action'=>'view'));
+		} else {			
+			if (!$id) {
+				$this->flash(sprintf(__('Invalid rates', true)), array('action' => 'index'));
+			}
+			if ($this->Rate->saveField('live',1,false)) {
+				$this->flash(__('Rate published', true), array('action' => 'index'));
+			}
+			$this->flash(__('Rate was not published', true), array('action' => 'index'));
+			$this->redirect(array('action' => 'index'));
+		}
+	}
+	
+	function unpublish($id = null) {
+		if($_SESSION['Auth']['User']['group_id']==2 || $_SESSION['Auth']['User']['group_id']==3){
+			$this->redirect(array('controller'=>'rates','action'=>'view'));
+		} else {			
+			if (!$id) {
+				$this->flash(sprintf(__('Invalid rate', true)), array('action' => 'index'));
+			}
+			if ($this->Rate->saveField('live',0,false)) {
+				$this->flash(__('Rate unpublished', true), array('action' => 'index'));
+			}
+			$this->flash(__('Rate was not unpublished', true), array('action' => 'index'));
+			$this->redirect(array('action' => 'index'));
+		}
+	}
+	
+	function deletefile($id = null) {
+		if (!$id) {
+			$this->flash(sprintf(__('Invalid File Name', true)), array('action' => 'index'));
+		}
+		if($this->Rate->saveField('rateFile','')){
+			//we have successfully deleted file from DB
+			$this->redirect(array('action' => 'edit/'.$id));
+		} else {
+			//deal with possible errors!
+		}
+		$this->autoRender=false;
+	}
+}
+?>

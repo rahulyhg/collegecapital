@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+						<rss version="2.0">
+							<channel>
+								<title>College Capital</title>
+								<link>http://ccap.collegecapital.com.au/</link>
+								<description>College Capital Finance Solutions</description>
+								<language>en-au</language>
+								<image>
+									<title>College Capital</title>
+									<url>http://ccap.collegecapital.com.au/images/logo.jpg</url>
+									<link>http://ccap.collegecapital.com.au/</link>
+									<width>100</width>
+								</image><item>
+				<title>Test News 1</title>
+				<link>http://ccap.collegecapital.com.au/latest-news/test-news-1</link>
+				<description><![CDATA[<p>
+	This is a test blurb for the test news.andnbsp;This is a test blurb for the test news.andnbsp;This is a test blurb for the test news.andnbsp;This is a test blurb for the test news.andnbsp;This is a test blurb for the test news.andnbsp;This is a test blurb for the test news. This is a test blurb for the test news.andnbsp;This is a test blurb for the test news.andnbsp;This is a test blurb for the test news.andnbsp;</p>
+]]></description>
+				<pubDate>2013-02-21</pubDate>
+			</item><item>
+				<title>Test News 2</title>
+				<link>http://ccap.collegecapital.com.au/latest-news/test-news-2</link>
+				<description><![CDATA[<p>
+	This is a test blurb for the test news.andnbsp;This is a test blurb for the test news.andnbsp;This is a test blurb for the test news.andnbsp;</p>
+]]></description>
+				<pubDate>2013-02-20</pubDate>
+			</item></channel>
+				</rss>

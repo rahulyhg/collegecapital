@@ -1,0 +1,15 @@
+.squarebox {
+    width: 100%;
+   /* border: solid 1px #336699;*/
+    text-align: center;
+    overflow: hidden; }
+.squareboxgradientcaption {
+    color: #ffffff;
+    padding: 5px;
+    /*background-image: url(/highbury/dreamcmsapp/webroot/img/gradient_blue.png);
+    background-repeat: repeat-x;*/ }
+.squareboxcontent {
+    /*background-color: #f5f5f5;
+    padding: 10px;
+    border-top: solid 1px #336699;*/
+    overflow: hidden; }

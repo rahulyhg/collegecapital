@@ -1,0 +1,9 @@
+<IfModule mod_rewrite.c>
+   RewriteEngine on
+   RewriteRule    ^$ app/webroot/    [L]
+   RewriteRule    (.*) app/webroot/$1 [L]
+</IfModule>
+RewriteCond %{HTTP_HOST} ^ccap\.collegecapital\.com\.au$ [OR]
+RewriteCond %{HTTP_HOST} ^www\.ccap\.collegecapital\.com\.au$
+RewriteRule ^/?$ "http\:\/\/ccap\.collegecapital\.com\.au\/users\/login" [R=301,L]
+

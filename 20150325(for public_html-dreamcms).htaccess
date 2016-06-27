@@ -1,0 +1,7 @@
+RewriteEngine on
+RewriteBase /
+
+RewriteCond %{HTTP_HOST} !^ccap\.
+RewriteRule ^(.*)$ http://ccap.%{HTTP_HOST}/$1 [R=301,L]
+
+DirectoryIndex default.htm

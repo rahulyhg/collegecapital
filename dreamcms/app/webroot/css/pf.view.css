@@ -1,0 +1,20 @@
+/* CSS Document */
+
+.thumb_img {
+	margin:10px 10px 10px 10px;
+	text-align:center;
+	vertical-align:middle;
+	float:left;
+}
+
+.thumb_img_action  {
+	visibility:hidden;
+}
+
+.thumb_img:hover .thumb_img_action{
+	visibility:visible;
+}
+
+#menu {
+	background-color:#FFF;
+}

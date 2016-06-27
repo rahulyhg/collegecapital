@@ -1,0 +1,612 @@
+<?php
+class ClaimsController extends AppController {
+
+	var $name = 'Claims';
+	var $components = array('JQValidator.JQValidator','RSS');
+	var $helpers = array('Form', 'Html', 'Javascript', 'Time', 'FormatEpochToDate', 'CustomDisplayFunctions','JQValidator.JQValidator');
+		
+	function homedisplay() {		
+		$this->loadModel('Users'); //if it's not already loaded
+		if($_SESSION['Auth']['User']['group_id']==1){
+			$brokerOptions = $this->Users->find('all',array('conditions' => array('Users.group_id' => 3), 'order' => array('Users.name' => 'ASC')));
+		} else {
+			$brokerOptions = $this->Users->find('all',array('conditions' => array('Users.group_id' => 3, 'Users.parent_user_id' => $_SESSION['Auth']['User']['id']), 'order' => array('Users.name' => 'ASC'))); //brokers only
+		}
+		$this->set('brokerOptions',$brokerOptions);
+
+		$this->set('queryString',((strlen($_SERVER['QUERY_STRING'])>0))?"?".$_SERVER['QUERY_STRING']:"");
+		
+		$this->Claim->recursive = 0;		
+		if(isset($_GET['sel'])){
+			if(trim($_GET['sel']=='all')){
+				if($_SESSION['Auth']['User']['group_id']==1){		
+					$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0')));	
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				} elseif($_SESSION['Auth']['User']['group_id']==2) {
+					$brokerList = "";
+					foreach($brokerOptions as $brokers):
+						$brokerList .= $brokers['Users']['id'].",";
+					endforeach;
+					$brokerList = substr($brokerList, 0, -1); //get rid of the last comma
+					$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker IN ('.$brokerList.')')));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker IN ('.$brokerList.')'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				} else {
+					$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'])));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id']),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					
+				}
+			} else {
+				if($_SESSION['Auth']['User']['group_id']==1){
+					//find total count of records
+					$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0','Claim.clientName LIKE' => ''.trim($_GET['sel']).'%')));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.clientName LIKE' => ''.trim($_GET['sel']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				}  elseif($_SESSION['Auth']['User']['group_id']==2) {
+					$brokerList = "";
+					foreach($brokerOptions as $brokers):
+						$brokerList .= $brokers['Users']['id'].",";
+					endforeach;
+					$brokerList = substr($brokerList, 0, -1); //get rid of the last comma
+					$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker IN ('.$brokerList.')','Claim.clientName LIKE' => ''.trim($_GET['sel']).'%')));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker IN ('.$brokerList.')', 'Claim.clientName LIKE' => ''.trim($_GET['sel']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				} else {
+					//find total count of records
+					$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'],'Claim.clientName LIKE' => ''.trim($_GET['sel']).'%')));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'], 'Claim.clientName LIKE' => ''.trim($_GET['sel']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					
+				}
+			}
+		} elseif(isset($_GET['group'])){
+			if((int)trim($_GET['group'])>0){
+				//add broker filter when admin and shareholdersa re logged in
+				if(($_SESSION['Auth']['User']['group_id']==1 || $_SESSION['Auth']['User']['group_id']==2) && !isset($_GET['lender'])){
+					//find total count of records
+					$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker =' => (int)trim($_GET['group']))));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker =' => (int)trim($_GET['group'])),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				} else { //add lender filter when broker is logged in
+					//find total count of records
+					if($_SESSION['Auth']['User']['group_id']==1) {
+						$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0','Claim.lender_id =' => (int)trim($_GET['group']))));
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.lender_id =' => (int)trim($_GET['group'])),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					} else {
+						$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'], 'Claim.lender_id =' => (int)trim($_GET['group']))));
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'], 'Claim.lender_id =' => (int)trim($_GET['group'])),'order' => array('Claim.settlementDate' => 'DESC'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					}
+				}
+			} else {
+				if($_SESSION['Auth']['User']['group_id']==1){
+					$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0')));	
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('order' => array('Claim.actioned = 0','Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));	
+				} elseif($_SESSION['Auth']['User']['group_id']==2) {
+					$brokerList = "";
+					foreach($brokerOptions as $brokers):
+						$brokerList .= $brokers['Users']['id'].",";
+					endforeach;
+					$brokerList = substr($brokerList, 0, -1); //get rid of the last comma
+					$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker IN ('.$brokerList.')')));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker IN ('.$brokerList.')'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				} else {
+					$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'])));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id']),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				}
+			}
+		} elseif(isset($_GET['search'])){
+			if($_SESSION['Auth']['User']['group_id']==1){
+				//find total count of records for super user
+				$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0','Claim.clientName LIKE' => '%'.trim($_GET['search']).'%')));
+				$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.clientName LIKE' => '%'.trim($_GET['search']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+			} elseif ($_SESSION['Auth']['User']['group_id']==2) { //for share holders
+				$brokerList = "";
+				foreach($brokerOptions as $brokers):
+					$brokerList .= $brokers['Users']['id'].",";
+				endforeach;
+				$brokerList = substr($brokerList, 0, -1); //get rid of the last comma
+				$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker IN ('.$brokerList.')', 'Claim.clientName LIKE' => '%'.trim($_GET['search']).'%')));
+				$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker IN ('.$brokerList.')', 'Claim.clientName LIKE' => '%'.trim($_GET['search']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+			} else {
+				//find total count of records for brokers
+				$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'], 'Claim.clientName LIKE' => '%'.trim($_GET['search']).'%')));
+				$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'], 'Claim.clientName LIKE' => '%'.trim($_GET['search']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+			}
+		} else {
+			if($_SESSION['Auth']['User']['group_id']==1){
+				$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.actioned = 0')));	
+				$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));	
+			} elseif($_SESSION['Auth']['User']['group_id']==2) {
+				$brokerList = "";
+				foreach($brokerOptions as $brokers):
+					$brokerList .= $brokers['Users']['id'].",";
+				endforeach;
+				$brokerList = substr($brokerList, 0, -1); //get rid of the last comma
+				$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker IN ('.$brokerList.')')));
+				$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker IN ('.$brokerList.')'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+			} else {
+				$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'])));
+				$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.actioned = 0','Claim.claims_user_broker' => $_SESSION['Auth']['User']['id']),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));	
+			}
+		}
+		$this->set('claims', $this->paginate());		
+		
+		$this->loadModel('ClaimsGoodsdesc'); //if it's not already loaded		
+		$goodsDescOptions = $this->ClaimsGoodsdesc->find('all'); //or whatever conditions you want
+		$this->set('goodsDescOptions',$goodsDescOptions);
+		
+		$this->loadModel('ClaimsIndustryprofile'); //if it's not already loaded
+		$industryProfileOptions = $this->ClaimsIndustryprofile->find('all'); //or whatever conditions you want
+		$this->set('industryProfileOptions',$industryProfileOptions);
+		
+		$this->loadModel('ClaimsLender'); //if it's not already loaded
+		$lenderOptions = $this->ClaimsLender->find('all'); //or whatever conditions you want
+		$this->set('lenderOptions',$lenderOptions);
+		
+		$this->loadModel('ClaimsProducttype'); //if it's not already loaded
+		$productTypeOptions = $this->ClaimsProducttype->find('all'); //or whatever conditions you want
+		$this->set('productTypeOptions',$productTypeOptions);
+		
+		//display Interest Rate Documents
+		//first get all dictinct cms_user_ids
+		$this->loadModel('Rate');
+		$bankIDs = $this->Rate->find('all', array('fields' => 'Rate.cms_user_id','group' => 'Rate.cms_user_id'));
+		//now iterate through each id to find the top interest rate ids
+		$implodedIDs = ""; $count = 0;
+		foreach($bankIDs as $bankID):
+			$rateIDs[$count] = $this->Rate->find('first', array(
+				'fields' => array('Rate.id'),
+				'conditions' => array('Rate.cms_user_id = '.$bankID['Rate']['cms_user_id']),
+				'order' => array('Rate.documentDate' => 'DESC')
+			));
+			$count++;
+		endforeach;
+		
+		for($i=0; $i<$count; $i++){				
+			$implodedIDs .= $rateIDs[$i]['Rate']['id'].',';
+		}
+		
+		//remove last comma
+		$implodedIDs = substr($implodedIDs, 0, -1);
+		
+		$this->set('iRateDocuments', $this->Rate->find('all', array(
+			'joins' => array(
+				array(
+					'table' => 'users',
+					'alias' => 'UserJoin',
+					'type' => 'INNER',
+					'conditions' => array(
+						'UserJoin.id = Rate.cms_user_id'
+					)
+				)
+			),
+			'conditions' => array(
+				'Rate.live' => 1,
+				'Rate.id IN ('.$implodedIDs.')'
+			),
+			'fields' => array('UserJoin.*', 'Rate.*'),
+			'order' => array('Rate.documentDate' => 'DESC'),
+			'limit' => 4					
+		)));
+		
+		//display News
+		$this->loadModel('News'); //if it's not already loaded
+		$news = $this->News->find('all',array('conditions' => array('live = 1', 'archiveDate > '.mktime(date('H'),date("i"),date('s'),date('n'),date('j'),date('Y'))),'order' => array('startDate' => 'DESC'), 'limit' => 2)); //or whatever conditions you want
+		$this->set('news',$news);
+		
+		$pageLimit = 50;				
+		$this->set('pageLimit',$pageLimit);
+		
+		$moduleHeading = "Transactions";
+		$this->set('moduleHeading',$moduleHeading);
+		$this->set('helpURL','claim');
+		
+		//layout options
+		$this->set('manage', true);
+		$this->set('removeBanner', true);
+		$this->set('removeSideMenu', true);
+		$this->set('fullWidth', true);
+	}
+	
+	function index() {
+		if($_SESSION['Auth']['User']['group_id']!=4){
+			$this->loadModel('Users'); //if it's not already loaded
+			if($_SESSION['Auth']['User']['group_id']==1){
+				$brokerOptions = $this->Users->find('all',array('conditions' => array('Users.group_id' => 3), 'order' => array('Users.name' => 'ASC')));
+			} else {
+				$brokerOptions = $this->Users->find('all',array('conditions' => array('Users.group_id' => 3, 'Users.parent_user_id' => $_SESSION['Auth']['User']['id']), 'order' => array('Users.name' => 'ASC'))); //brokers only
+			}
+			$this->set('brokerOptions',$brokerOptions);
+			
+			
+			$this->Claim->recursive = 0;
+			if(isset($_GET['sel'])){
+				if(trim($_GET['sel']=='all')){
+					if($_SESSION['Auth']['User']['group_id']==1){		
+						$recordCount = $this->Claim->find('count');	
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					} elseif($_SESSION['Auth']['User']['group_id']==2) {
+						$brokerList = "";
+						foreach($brokerOptions as $brokers):
+							$brokerList .= $brokers['Users']['id'].",";
+						endforeach;
+						$brokerList = substr($brokerList, 0, -1); //get rid of the last comma
+						$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.claims_user_broker IN ('.$brokerList.')')));
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker IN ('.$brokerList.')'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					} else {
+						$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'])));
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id']),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+						
+					}
+				} else {
+					if($_SESSION['Auth']['User']['group_id']==1){
+						//find total count of records
+						$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.clientName LIKE' => ''.trim($_GET['sel']).'%')));
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.clientName LIKE' => ''.trim($_GET['sel']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					}  elseif($_SESSION['Auth']['User']['group_id']==2) {
+						$brokerList = "";
+						foreach($brokerOptions as $brokers):
+							$brokerList .= $brokers['Users']['id'].",";
+						endforeach;
+						$brokerList = substr($brokerList, 0, -1); //get rid of the last comma
+						$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.claims_user_broker IN ('.$brokerList.')','Claim.clientName LIKE' => ''.trim($_GET['sel']).'%')));
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker IN ('.$brokerList.')', 'Claim.clientName LIKE' => ''.trim($_GET['sel']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					} else {
+						//find total count of records
+						$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'],'Claim.clientName LIKE' => ''.trim($_GET['sel']).'%')));
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'], 'Claim.clientName LIKE' => ''.trim($_GET['sel']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+						
+					}
+				}
+			} elseif(isset($_GET['group'])){
+				if((int)trim($_GET['group'])>0){
+					//add broker filter when admin and shareholdersa re logged in
+					if(($_SESSION['Auth']['User']['group_id']==1 || $_SESSION['Auth']['User']['group_id']==2) && !isset($_GET['lender'])){
+						//find total count of records
+						$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.claims_user_broker =' => (int)trim($_GET['group']))));
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker =' => (int)trim($_GET['group'])),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					} else { //add lender filter when broker is logged in
+						//find total count of records
+						if($_SESSION['Auth']['User']['group_id']==1) {
+							$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.lender_id =' => (int)trim($_GET['group']))));
+							$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.lender_id =' => (int)trim($_GET['group'])),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+						} else {
+							$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'], 'Claim.lender_id =' => (int)trim($_GET['group']))));
+							$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'], 'Claim.lender_id =' => (int)trim($_GET['group'])),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+						}
+					}
+				} else {
+					if($_SESSION['Auth']['User']['group_id']==1){
+						$recordCount = $this->Claim->find('count');	
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));	
+					} elseif($_SESSION['Auth']['User']['group_id']==2) {
+						$brokerList = "";
+						foreach($brokerOptions as $brokers):
+							$brokerList .= $brokers['Users']['id'].",";
+						endforeach;
+						$brokerList = substr($brokerList, 0, -1); //get rid of the last comma
+						$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.claims_user_broker IN ('.$brokerList.')')));
+						$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker IN ('.$brokerList.')'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					} else {
+						$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'])));
+							$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id']),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+					}
+				}
+			} elseif(isset($_GET['search'])){
+				if($_SESSION['Auth']['User']['group_id']==1){
+					//find total count of records for super user
+					$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.clientName LIKE' => '%'.trim($_GET['search']).'%')));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.clientName LIKE' => '%'.trim($_GET['search']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				} elseif ($_SESSION['Auth']['User']['group_id']==2) { //for share holders
+					$brokerList = "";
+					foreach($brokerOptions as $brokers):
+						$brokerList .= $brokers['Users']['id'].",";
+					endforeach;
+					$brokerList = substr($brokerList, 0, -1); //get rid of the last comma
+					$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.claims_user_broker IN ('.$brokerList.')', 'Claim.clientName LIKE' => '%'.trim($_GET['search']).'%')));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker IN ('.$brokerList.')', 'Claim.clientName LIKE' => '%'.trim($_GET['search']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				} else {
+					//find total count of records for brokers
+					$recordCount = $this->Claim->find('count',array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'], 'Claim.clientName LIKE' => '%'.trim($_GET['search']).'%')));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'], 'Claim.clientName LIKE' => '%'.trim($_GET['search']).'%'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				}
+			} else {
+				if($_SESSION['Auth']['User']['group_id']==1){
+					$recordCount = $this->Claim->find('count');	
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));	
+				} elseif($_SESSION['Auth']['User']['group_id']==2) {
+					$brokerList = "";
+					foreach($brokerOptions as $brokers):
+						$brokerList .= $brokers['Users']['id'].",";
+					endforeach;
+					$brokerList = substr($brokerList, 0, -1); //get rid of the last comma
+					$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.claims_user_broker IN ('.$brokerList.')')));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker IN ('.$brokerList.')'),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));
+				} else {
+					$recordCount = $this->Claim->find('count', array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id'])));
+					$this->paginate = Set::merge($this->paginate,array('Claim'=>array('conditions' => array('Claim.claims_user_broker' => $_SESSION['Auth']['User']['id']),'order' => array('Claim.settlementDate' => 'DESC'),'limit'=>$recordCount)));	
+				}
+			}
+			$this->set('claims', $this->paginate());		
+			
+			$this->loadModel('ClaimsGoodsdesc'); //if it's not already loaded
+			$goodsDescOptions = $this->ClaimsGoodsdesc->find('all'); //or whatever conditions you want
+			$this->set('goodsDescOptions',$goodsDescOptions);
+			
+			$this->loadModel('ClaimsIndustryprofile'); //if it's not already loaded
+			$industryProfileOptions = $this->ClaimsIndustryprofile->find('all'); //or whatever conditions you want
+			$this->set('industryProfileOptions',$industryProfileOptions);
+			
+			$this->loadModel('ClaimsLender'); //if it's not already loaded
+			$lenderOptions = $this->ClaimsLender->find('all'); //or whatever conditions you want
+			$this->set('lenderOptions',$lenderOptions);
+			
+			$this->loadModel('ClaimsProducttype'); //if it's not already loaded
+			$productTypeOptions = $this->ClaimsProducttype->find('all'); //or whatever conditions you want
+			$this->set('productTypeOptions',$productTypeOptions);
+			
+			
+			//has report attached?
+			$reporting = true;
+			$this->set('reporting', $reporting);
+			
+			$pageLimit = 50;
+			$this->set('pageLimit',$pageLimit);
+			
+			$moduleHeading = 'Transactions';
+			$this->set('moduleHeading',$moduleHeading);
+			$this->set('moduleAction','Manage');
+			
+			$this->set('helpURL','claim');
+			
+			//layout options
+			$this->set('manage', true);
+			$this->set('removeBanner', false);
+			$this->set('removeSideMenu', false);
+			$this->set('fullWidth', false);
+		} else {
+			$this->redirect(array('controller'=>'pages','action'=>'display','home'));	
+		}
+	}
+
+	function view($id = null) {
+		if($_SESSION['Auth']['User']['group_id']==1 || $_SESSION['Auth']['User']['group_id']==3){
+			$this->redirect(array('controller'=>'claims','action'=>'index'));				
+		} else {
+			$this->redirect(array('controller'=>'claims','action'=>'homedisplay'));	
+		}
+	}
+
+	function add() {
+		if($_SESSION['Auth']['User']['group_id']<4){ //all but banks			
+			if (!empty($this->data)) {
+				$this->Claim->create();
+				if ($this->Claim->save($this->data)) {
+					$this->flash(__('Transaction saved.', true), array('action' => 'index'));
+				} else {
+				}
+			}
+			$this->layout='add-edit';
+			$ckeditorClass = '';
+			$this->set('ckeditorClass', $ckeditorClass);
+			$ckfinderPath = Configure::read('Company.wysiwyg').'app/webroot/js/ckfinder/';
+			$this->set('ckfinderPath', $ckfinderPath);
+			
+			$this->loadModel('ClaimsGoodsdesc'); //if it's not already loaded
+			$goodsDescOptions = $this->ClaimsGoodsdesc->find('all'); //or whatever conditions you want
+			$this->set('goodsDescOptions',$goodsDescOptions);
+			$this->loadModel('ClaimsIndustryprofile'); //if it's not already loaded
+			$industryProfileOptions = $this->ClaimsIndustryprofile->find('all'); //or whatever conditions you want
+			$this->set('industryProfileOptions',$industryProfileOptions);
+			$this->loadModel('ClaimsLender'); //if it's not already loaded
+			$lenderOptions = $this->ClaimsLender->find('all'); //or whatever conditions you want
+			$this->set('lenderOptions',$lenderOptions);
+			$this->loadModel('ClaimsProducttype'); //if it's not already loaded
+			$productTypeOptions = $this->ClaimsProducttype->find('all'); //or whatever conditions you want
+			$this->set('productTypeOptions',$productTypeOptions);
+			$this->loadModel('ClaimsProducttype'); //if it's not already loaded
+			$productTypeOptions = $this->ClaimsProducttype->find('all'); //or whatever conditions you want
+			$this->set('productTypeOptions',$productTypeOptions);
+			$this->loadModel('Users'); //if it's not already loaded
+			if($_SESSION['Auth']['User']['group_id']==1){
+				$brokerOptions = $this->Users->find('all',array('conditions' => array('Users.group_id' => 3), 'order' => array('Users.name' => 'ASC')));
+			} elseif($_SESSION['Auth']['User']['group_id']==2) {
+				$brokerOptions = $this->Users->find('all',array('conditions' => array('Users.group_id' => 3, 'Users.parent_user_id' => $_SESSION['Auth']['User']['id']), 'order' => array('Users.name' => 'ASC'))); //shareholders only
+			} else {
+				$brokerOptions = $this->Users->find('all',array('conditions' => array('Users.group_id' => 3, 'Users.id' => $_SESSION['Auth']['User']['id']), 'order' => array('Users.name' => 'ASC'))); //brokers only
+			}
+			$this->set('brokerOptions',$brokerOptions);
+			
+			//has report attached?
+			$reporting = true;
+			$this->set('reporting', $reporting);
+			
+			$moduleHeading = 'Transactions';
+			$this->set('moduleHeading',$moduleHeading);
+			$this->set('moduleAction','Add');
+			$this->set('helpURL','claim');	
+			//layout options
+			$this->set('manage', true);
+			$this->set('removeBanner', false);
+			$this->set('removeSideMenu', false);
+			$this->set('fullWidth', false);	
+			//javascript validations
+			$this->JQValidator->addValidation
+			(
+				'Claim',
+				$this->Claim->validate,
+				__('Save failed, fix the following errors:', true),
+				'ClaimAddForm'
+			);
+		} else {
+			//redirect shareholders and banks to home page
+			$this->redirect(array('controller'=>'claims','action'=>'homedisplay','home'));	
+		}
+	}
+
+	function edit($id = null) {
+		if($_SESSION['Auth']['User']['group_id']==4){ //admin and brokers only	
+			//redirect banks to home page
+			$this->redirect(array('controller'=>'claims','action'=>'homedisplay','home'));	
+		} else {
+			if (!$id && empty($this->data)) {
+				$this->flash(sprintf(__('Invalid transaction', true)), array('action' => 'index'));
+			}
+			if (!empty($this->data)) {
+				if ($this->Claim->save($this->data)) {
+					$this->flash(__('The transaction has been saved.', true), array('action' => 'index'));
+				}
+			}
+			if (empty($this->data)) {
+				$this->data = $this->Claim->read(null, $id);
+				//backend security for not allowing anyone to access a claim if it is marked as actioned
+				if($this->data['Claim']['actioned']==1){ 
+					if($_SESSION['Auth']['Users']['group_id']!=1){
+						$this->redirect(Controller::referer());	
+					}
+				}
+			}
+			$this->layout='add-edit';
+			$ckeditorClass = '';
+			$this->set('ckeditorClass', $ckeditorClass);
+			$ckfinderPath = Configure::read('Company.wysiwyg').'app/webroot/js/ckfinder/';
+			$this->set('ckfinderPath', $ckfinderPath);
+			
+			$this->loadModel('ClaimsGoodsdesc'); //if it's not already loaded
+			$goodsDescOptions = $this->ClaimsGoodsdesc->find('all'); //or whatever conditions you want
+			$this->set('goodsDescOptions',$goodsDescOptions);
+			$this->loadModel('ClaimsIndustryprofile'); //if it's not already loaded
+			$industryProfileOptions = $this->ClaimsIndustryprofile->find('all'); //or whatever conditions you want
+			$this->set('industryProfileOptions',$industryProfileOptions);
+			$this->loadModel('ClaimsLender'); //if it's not already loaded
+			$lenderOptions = $this->ClaimsLender->find('all'); //or whatever conditions you want
+			$this->set('lenderOptions',$lenderOptions);
+			$this->loadModel('ClaimsProducttype'); //if it's not already loaded
+			$productTypeOptions = $this->ClaimsProducttype->find('all'); //or whatever conditions you want
+			$this->set('productTypeOptions',$productTypeOptions);
+			$this->loadModel('ClaimsProducttype'); //if it's not already loaded
+			$productTypeOptions = $this->ClaimsProducttype->find('all'); //or whatever conditions you want
+			$this->set('productTypeOptions',$productTypeOptions);
+			$this->loadModel('Users'); //if it's not already loaded
+			if($_SESSION['Auth']['User']['group_id']==1){
+				$brokerOptions = $this->Users->find('all',array('conditions' => array('Users.group_id' => 3), 'order' => array('Users.name' => 'ASC')));
+			} elseif($_SESSION['Auth']['User']['group_id']==2) {
+				$brokerOptions = $this->Users->find('all',array('conditions' => array('Users.group_id' => 3, 'Users.parent_user_id' => $_SESSION['Auth']['User']['id']), 'order' => array('Users.name' => 'ASC'))); //shareholders only
+			} else {
+				$brokerOptions = $this->Users->find('all',array('conditions' => array('Users.group_id' => 3, 'Users.id' => $_SESSION['Auth']['User']['id']), 'order' => array('Users.name' => 'ASC'))); //brokers only
+			}
+			$this->set('brokerOptions',$brokerOptions);
+			
+			//has report attached?
+			$reporting = true;
+			$this->set('reporting', $reporting);
+			
+			$moduleHeading = 'Transactions';
+			$this->set('moduleHeading',$moduleHeading);
+			$this->set('moduleAction','Edit');
+			$this->set('helpURL','claim');
+			//layout options
+			$this->set('manage', true);
+			$this->set('removeBanner', false);
+			$this->set('removeSideMenu', false);
+			$this->set('fullWidth', false);		
+			//javascript validations
+			$this->JQValidator->addValidation
+			(
+				'Claim',
+				$this->Claim->validate,
+				__('Save failed, fix the following errors:', true),
+				'ClaimEditForm'
+			);	
+		}
+	}
+
+	function extractreport(){
+		if(empty($this->data)){
+			$this->set('claim', $this->Claim->read(null, null));
+		} else {
+			$results = $this->Claim->executeReport($this->data);
+			$report = array(); 
+			foreach ($results as $v) { 
+			  $report[] = $this->Claim->array_flatten($v); 
+			}
+			$this->set('report',$report);
+			
+			$resultsReportAmount = $this->Claim->showReportTotalAmount($this->data);
+			$this->set('reportTotalAmount',$resultsReportAmount);
+		}
+		$this->layout='ajax';
+		$moduleHeading = 'Transaction Report';
+		$this->set('moduleHeading',$moduleHeading);
+	}
+		
+	function delete($id = null) {
+		if($_SESSION['Auth']['User']['group_id']==1 || $_SESSION['Auth']['User']['group_id']==2) {
+			if (!$id) {
+				$this->flash(sprintf(__('Invalid transaction', true)), array('action' => 'index'));
+			}
+			if ($this->Claim->delete($id)) {
+				$this->flash(__('Transaction deleted', true), array('action' => 'index'));
+			}
+			$this->flash(__('Transaction was not deleted', true), array('action' => 'index'));
+			$this->redirect(array('action' => 'index'));
+		} else {
+			$this->redirect(array('controller'=>'claims','action'=>'homedisplay','home'));	
+		}
+	}
+	
+	function publish($id = null) {
+//		if ($_SESSION['Auth']['User']['id']==1) {
+		if($_SESSION['Auth']['User']['group_id']==1) { //only super users can mark transactions/claims as actioned
+			if (!$id) {
+				$this->flash(sprintf(__('Invalid transaction', true)), array('action' => 'index'));
+			}
+			$id_array = explode(",", $id);
+			$actioned = true;
+			if(isset($id_array[0])) {
+				$flash_text = "";
+				foreach($id_array as $v) {
+					// run sql to mark items as actioned individually
+					$sql = "update claims set actioned=1 where id=".$v;
+					$actioned = ($this->Claim->query($sql))?$actioned:false;
+					$flash_text.= "actioned: ".$sql."<br>";
+				}
+				if($actioned) {
+					$this->flash(__('All transactions selected marked as \'actioned\'', true), array('action' => 'index'));
+				} else {
+					$this->flash(__('Not all transactions where actioned', true), array('action' => 'index'));
+				}
+			} else { // error
+				$this->flash(__('No transactions actioned', true), array('action' => 'index'));
+				$this->redirect(array('action' => 'index'));
+			}
+		} else {
+			$this->redirect(array('controller'=>'claims','action'=>'homedisplay','home'));	
+		}
+//		} else {
+//			if($_SESSION['Auth']['User']['group_id']==1) { //only super users can mark transactions/claims as actioned
+//				if (!$id) {
+//					$this->flash(sprintf(__('Invalid transaction', true)), array('action' => 'index'));
+//				}
+//				if ($this->Claim->saveField('actioned',1,false)) {
+//					$this->flash(__('Transaction marked as \'actioned\'', true), array('action' => 'index'));
+//				}
+//				$this->flash(__('Transaction not actioned', true), array('action' => 'index'));
+//				$this->redirect(array('action' => 'index'));
+//			} else {
+//				$this->redirect(array('controller'=>'claims','action'=>'homedisplay','home'));	
+//			}
+//		}
+	}
+	
+	function unpublish($id = null) {
+		if($_SESSION['Auth']['User']['group_id']==1) {
+			if (!$id) {
+				$this->flash(sprintf(__('Invalid transaction', true)), array('action' => 'index'));
+			}
+			if ($this->Claim->saveField('actioned',0,false)) {
+				$this->flash(__('Transaction back in the unprocessed queue', true), array('action' => 'index'));
+			}
+			$this->flash(__('Transaction needs to be updated', true), array('action' => 'index'));
+			$this->redirect(array('action' => 'index'));
+		} else {
+			$this->redirect(array('controller'=>'claims','action'=>'homedisplay','home'));	
+		}
+	}
+}
+?>

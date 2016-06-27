@@ -1,0 +1,50 @@
+#paging_container {
+	height: auto;	
+}
+#paging_container .no_more{
+    background-color: white;
+    color: gray;
+    cursor: default;
+}
+
+#paging_container .ellipse{
+	float: left;
+}
+
+.container{
+	width: 100%;
+	/*float: left;
+	display: inline;
+	margin: 50px 10px 10px;
+	padding: 20px;*/
+	background-color: white;
+}
+#paging_container .info_text { font-size: 11px; }
+
+#paging_container .page_navigation , #paging_container .alt_page_navigation{
+	padding-bottom: 10px;
+}
+
+#paging_container .page_navigation a, #paging_container .alt_page_navigation a{
+	padding:1px 7px;
+	margin:2px;
+	color:white;
+	text-decoration:none;
+	float: left;
+	font-family: Arial;
+	font-size: 11px;
+	background-color:#999;
+	-webkit-border-radius: 5px; border-radius: 5px; 
+}
+#paging_container .active_page{
+	background-color:white !important;
+	color:black !important;
+}	
+
+#paging_container .content, #paging_container .alt_content{
+	color: black;
+}
+
+#paging_container .content li, #paging_container .alt_content li, #paging_container .content > p{
+	padding: 0px 0px 0px 20px;
+}

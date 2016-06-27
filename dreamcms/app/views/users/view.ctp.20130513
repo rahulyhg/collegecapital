@@ -1,0 +1,87 @@
+<?php
+	if(isset($userList) && !$userList){ //display individual users
+?>
+    <div class="users view" style="line-height: 200%;">
+        <h2><?php echo $user['User']['name']." ".$user['User']['surname']; ?></h2>         
+        <div style="float: right; width: auto; height: auto; margin: 10px; padding: 0px;">
+        	<?php if(strlen($user['User']['logo'])>0) { ?><img src="<?php echo '/app/webroot/uploads/users/'.$user['User']['logo'];?>" width="150" /> <?php } 
+			if($_SESSION['Auth']['User']['group_id']==3 && $user['User']['id']==$_SESSION['Auth']['User']['id']){ //if brokers
+				echo "<br /><center><a href='".Configure::read('Company.menuUrl')."users/edit/".(int)$user['User']['id']."' title='Edit Profile'>Edit Profile</a></center>";
+			}
+			?>
+        </div>     
+        
+        <?php if(strlen($user['User']['position'])>0){ echo "<strong>Position:</strong> ".$user['User']['position']."<br />";}?>
+		<?php if(strlen($user['User']['companyName'])>0){ echo "<strong>Company Name:</strong> ".$user['User']['companyName']."<br />";}?>
+        <?php if(strlen($user['User']['email'])>0){?><strong>Email:</strong> <a href="mailto:<?php echo $user['User']['email'];?>"><?php echo $user['User']['email']."<br />"; ?></a><?php } ?>
+        <?php if($user['User']['mobile']>0){ echo "<strong>Mobile:</strong> ".$user['User']['mobile']."<br />"; } ?>
+        <?php if($user['User']['phone']>0){ echo "<strong>Phone:</strong> ".$user['User']['phone']."<br />"; } ?>
+        <?php if($user['User']['fax']>0){ echo "<strong>Fax:</strong> ".$user['User']['fax']."<br />"; } ?>
+        <?php if(strlen($user['User']['streetAddress'])>0){ echo "<strong>Street Address:</strong> ".$user['User']['streetAddress'].(strlen($streetState['Tblstate']['State'])>0?", ".$streetState['Tblstate']['State']:"")."<br />";} ?>
+        
+        <?php if(strlen($user['User']['googleMap'])>0){?><strong>Map:</strong> <a href="<?php echo $user['User']['googleMap'];?>" target="_blank"><?php echo $user['User']['googleMap']."<br />"; ?></a><?php } ?>
+        <?php if(strlen($user['User']['website'])>0){?><strong>Website:</strong> <a href="<?php echo (substr($user['User']['website'],4)=='http'?$user['User']['website']:"//".$user['User']['website']);?>" target="_blank"><?php echo $user['User']['website']."<br />"; ?></a><?php } ?>
+        <?php if($_SESSION['Auth']['User']['id']==$user['User']['id']){?><p><?php if(strlen($user['User']['websiteLogin'])>0){?><a href="mailto:<?php echo $user['User']['websiteLogin'];?>"><?php echo "<strong>Website Login:</strong> ".$user['User']['websiteLogin']."<br />"; ?></a><?php } ?><?php } ?>
+ 
+        <?php if(strlen($user['User']['linkedIn'])>0){?><a href="<?php echo $user['User']['linkedIn'];?>" target="_blank"><?php echo "<strong>LinkedIn:</strong> ".$user['User']['linkedIn']; ?></a><?php } ?>     
+    </div>
+<?php
+	} else {
+		if($user){
+			echo $this->Html->css('paginateStyles.css');
+			if (isset($javascript)) {
+				echo $javascript->link('jquery.paginate.min.js');
+				$this->set('page','network');
+			}
+?>
+			<script language="javascript" type="text/javascript">
+                $(document).ready(function(){
+                    $('#paging_container').pajinate({
+                        num_page_links_to_display : 4,
+                        items_per_page : <?php echo $pageLimit;?>	
+                    });
+                });
+            </script>
+            <?php if ($options){ ?>
+            <div style="clear: both;display: block;height:30px; width: 150px;  padding: 0px 100px 10px 0px;">
+				<?php
+                    $jsString = "javascript:location.href='?group='+this.value;";
+                    $categoryOptions[0] = 'Select Network Group';
+                    foreach ($options as $option){
+                        $categoryOptions[$option['Group']['id']] = $option['Group']['group'];
+                    }
+                    if (!isset($_GET['group'])) {
+                        echo $this->Form->input('select_network_group', array('label'=> '','type' => 'select','options' => $categoryOptions,'onchange'=> $jsString));
+                    } else {
+                        $groupValue = $_GET['group'];
+                        echo $this->Form->input('select_network_group', array('label'=> '','type' => 'select','options' => $categoryOptions,'onchange'=> $jsString,'default' => $groupValue));
+                    }
+                ?>
+            </div>
+             <hr>
+<?php        
+			}
+			echo "<div id='paging_container'><div  class='content'>";
+			foreach($user as $user_items):		
+?>
+				<div class="users view">
+                 <?php if(strlen($user_items['User']['logo'])>0) { ?>
+                            <div style="float: right; width: 70px; height: auto; margin: 10px; padding: 0px;"><img src="<?php echo '/app/webroot/uploads/users/'.$user_items['User']['logo'];?>" width="70" /></div>
+                        <?php } ?>
+                    <h4><a href="/users/view/<?php echo $user_items['User']['id'];?>"><?php echo $user_items['User']['name']." ".$user_items['User']['surname']; ?></a></h4>
+                    <?php if(strlen($user_items['User']['companyName'])>0){ echo "<strong>Company Name:</strong> ".$user_items['User']['companyName']."<br />";}?>
+                    <?php if(strlen($user_items['User']['phone'])>0 && (int)$user_items['User']['phone']>0){ echo "<strong>Phone:</strong> ".$user_items['User']['phone']."<br />";}?>
+                    <?php if(strlen($user_items['User']['mobile'])>0 && (int)$user_items['User']['mobile']>0){ echo "<strong>Mobile:</strong> ".$user_items['User']['mobile']."<br />";}?>
+        			<?php if(strlen($user_items['User']['email'])>0){?><strong>Email:</strong> <a href="mailto:<?php echo $user_items['User']['email'];?>"><?php echo $user_items['User']['email']; ?></a><?php } ?> <br clear='all' /><hr style="margin-top:10px;"/>                   
+                </div>
+<?php
+			endforeach;
+			echo "	</div><br clear='all' />
+                    <div class='info_text'></div>
+                    <div class='page_navigation'></div>
+                </div>";
+		} else {
+			echo "<p>There are currently no members in this network. Please check back later.</p>";
+		}
+	}
+?>

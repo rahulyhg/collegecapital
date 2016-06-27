@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /css
+Disallow: /db
+Disallow: /dreamcms
+Disallow: /font
+Disallow: /images
+Disallow: /inc
+Disallow: /js
+Disallow: /phpmailer
+Disallow: /qaptcha
+
+Sitemap: http://www.collegecapital.com.au/sitemap.xml

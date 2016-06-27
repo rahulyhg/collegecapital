@@ -1,0 +1,2 @@
+[10-Jun-2015 10:44:07 Australia/Melbourne] PHP Fatal error:  Class 'ZipArchive' not found in /home/wwwcolle/public_html/dreamcms/app/vendors/Excel/Classes/PHPExcel/Writer/Excel2007.php on line 205
+[10-Jun-2015 11:22:41 Australia/Melbourne] PHP Fatal error:  Class 'XMLWriter' not found in /home/wwwcolle/public_html/dreamcms/app/vendors/Excel/Classes/PHPExcel/Shared/XMLWriter.php on line 44

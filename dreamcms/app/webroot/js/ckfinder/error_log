@@ -1,0 +1,1 @@
+[20-May-2015 03:00:25 UTC] PHP Fatal error:  Call to undefined function resolveUrl() in /home/wwwcolle/public_html/dreamcms/app/webroot/js/ckfinder/config.php on line 92

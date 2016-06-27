@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/CMS/!svn/ver/11/trunk/dreamcms/app/tests/cases/models
+END
+group.test.php
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/CMS/!svn/ver/11/trunk/dreamcms/app/tests/cases/models/group.test.php
+END
+news.test.php
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/CMS/!svn/ver/11/trunk/dreamcms/app/tests/cases/models/news.test.php
+END
+user.test.php
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/CMS/!svn/ver/11/trunk/dreamcms/app/tests/cases/models/user.test.php
+END
+user_status.test.php
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/CMS/!svn/ver/11/trunk/dreamcms/app/tests/cases/models/user_status.test.php
+END
+empty
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/CMS/!svn/ver/11/trunk/dreamcms/app/tests/cases/models/empty
+END

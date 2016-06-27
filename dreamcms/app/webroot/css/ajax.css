@@ -1,0 +1,167 @@
+/* main settings */
+
+body {background-color: #f5f5f5; margin: 0 auto;padding: 0px;text-align: center; width: auto;font-size:90%;height: auto; font: normal 13px/19px Arial, Helvetica, sans-serif; color: #333;}
+		
+	
+#panel {
+	width: 400px;
+	margin: 0 auto;padding:20px;
+	background-color: #fff;
+	border: #e8e8e8 1px solid;
+	overflow:auto;
+	height: auto;
+	-moz-border-radius: 0 0 20px 20px; /* css3 rounded corners */
+	border-radius: 0 0 20px 20px;
+	}
+
+#panel-large {
+	width: 700px;
+	margin: 0 auto;padding:20px;
+	background-color: #fff;
+	border: #e8e8e8 1px solid;
+	overflow:auto;
+	height: auto;
+	-moz-border-radius: 0 0 20px 20px; /* css3 rounded corners */
+	border-radius: 0 0 20px 20px;
+	}
+
+#content {
+	width:100%;float: left;
+	text-align: left;
+	margin:0;padding: 0;
+}
+
+
+p {	font: normal 13px/19px Arial, Helvetica, sans-serif; margin:0; padding:5px 0 3px 0; 	}
+
+a, a:visited, a:active { color: #000; text-decoration: none;}
+a:hover {color: #0068AA;text-decoration: none;}
+
+h1  { color: #0068AA; font: normal 25px/26px  Arial, Helvetica, sans-serif; padding: 10px 0 5px 15px;   }
+h2 { color: #0068AA; font: normal 22px/23px Arial, Helvetica, sans-serif; padding: 5px 0;  }
+
+ul { font-size:13px; line-height: 130%;
+	list-style-type: none;
+	padding-left: 0;
+	/*margin: 10px 0 0 10px;*/}
+li {
+	background: url(../img/bullet.gif) no-repeat 0px 4px;
+	padding-left: 16px;
+	margin-bottom: 3px;}
+	
+hr {border: 0;
+height: 1px;
+border-top:1px #ccc dotted;
+width: 100%;
+padding: 5px 0;}
+	
+
+
+/* form fields */
+
+form, select, input, textarea, submit {font: normal 11px/13px Arial, Helvetica, sans-serif; color: #333333; width: 90%;}
+select { width:250px; }
+input.text, input, select {	 
+      -webkit-border-radius: 6px;
+      -moz-border-radius: 6px;
+      border-radius: 6px;
+      border:solid 1px #ccc;
+      font-size: 12px;
+
+      padding: 6px 8px 6px 8px;
+      -moz-box-shadow: 0px 1px 0px #cccccc;
+      -webkit-box-shadow: 0px 1px 0px #cccccc;
+      color:#333;
+
+}
+
+
+input#heading, input#pdflabel, input#text   { width:400px; }
+input#search   { width:150px; height: 10px;}
+input.date   { width:100px; }
+input.radio  { width:25px; }
+input.button { width:100px; height: 22px;}
+
+
+#clear {clear:both;}
+
+
+a.asc:after {
+	content: ' ↑';
+}
+a.desc:after {
+	content: ' ↓';
+}
+
+.form {
+	clear: both;
+    float: right;
+    margin: 0 0 20px;
+    padding: 0;
+    width: 100%;
+}
+.form button {
+	height: 22px;
+    width: 100px;
+}
+.form select {
+	margin: 5px 0px 0px 0px;
+	height: 18px; width: 250px;
+}
+.form label {
+	float: left;
+	width: 180px;
+	clear: right !important;
+    margin-left: 8px;
+}
+.form input{
+	width: 250px;
+}
+.form input.checkbox{
+	width: 20px;
+}
+.form input.text {
+	margin: 5px 0px 0px 0px;
+	width: 400px;
+}
+.form .dp-applied {
+	margin: 0px;
+	width: 120px;
+}
+.form .uploadButton{
+	width: auto;
+}
+.editForm label { width: 25%; float: left; }
+.editForm .input {
+	float: left; width: 100%; float: left; padding: 10px 20px;
+	margin: 0px; background-color:#fff;
+}
+.editForm .textareaForm {
+	width: 400px;	
+}
+.editForm .checkbox input{
+	/*width: 0px;*/
+}
+.editForm .nrmlTextArea{
+	width: 400px;	
+}
+.editForm .multiCheckbox {
+	float: left; width: auto;
+}
+.editForm .multiCheckbox input{
+	float: left; width: auto;margin: 4px 4px 0 0;
+}
+.editForm .multiCheckbox label{
+	float: left;margin: -2px 5px 0 0;width: auto;
+}
+.error-message {
+	background-color: #8D1010;
+    border: 1px solid #EC2828;
+    border-radius: 4px 4px 4px 4px;
+    box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.4);
+    color: white;float: right; line-height: 14px;
+    height: 15px;width: auto;
+    margin: 0;padding: 2px;
+    position: relative;
+}
+

@@ -1,0 +1,49 @@
+#paging_container {
+	height: auto; padding: 0; margin: 0;	
+}
+#paging_container .no_more{
+    background-color: white;
+    color: gray;
+    cursor: default;
+}
+
+.ellipse{
+	float: left;
+}
+
+.container{
+	width: 100%;
+	/*float: left;
+	display: inline;
+	margin: 50px 10px 10px;
+	padding: 20px;*/
+	background-color: white;
+}
+
+.page_navigation , .alt_page_navigation{
+	padding-bottom: 10px;
+}
+
+.page_navigation a, .alt_page_navigation a{
+	padding:1px 7px;
+	margin:2px;
+	color:white;
+	text-decoration:none;
+	float: left;
+	font-family: Arial;
+	font-size: 11px;
+	background-color:#999;
+	-webkit-border-radius: 5px; border-radius: 5px; 
+}
+.active_page{
+	background-color:white !important;
+	color:black !important;
+}	
+
+.content, .alt_content{
+	color: black;
+}
+
+.content li, .alt_content li, .content > p{
+	padding: 5px;
+}

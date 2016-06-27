@@ -1,0 +1,205 @@
+<?php
+$this->set('page','home');
+echo $this->Html->css('thickbox.css'); 
+echo $this->Html->css('paginateStyles.css');
+
+if (isset($javascript)) {
+	echo $javascript->link('jquery.paginate.min.js');
+	echo $this->Html->script('thickbox.js');
+}
+?>
+<script language="javascript" type="text/javascript">
+	$(document).ready(function(){
+		$('#paging_container').pajinate({
+			num_page_links_to_display : 4,
+			items_per_page : <?php echo $pageLimit;?>	
+		});
+	});
+</script>
+<style>#contentRight {width: 100%; border: none; padding: 0; margin: 0;} </style>
+<div class="home">
+
+<div id="band">
+<div id="band-left"><h1>Welcome to cCap</h1><p>Use the menu options above to view and manage<br /> the areas of the website you can access. <br /><strong>Any questions?</strong> <a href="/contacts">Please do not hesitate to contact College Capital.</a></p></div>
+<?php if($iRateDocuments){ ?>
+		<div id="band-right"><h1>Interest Rates</h1> 
+		<ul><!-- dynamic content -->
+<?php	if($_SESSION['Auth']['User']['group_id']!=4) {
+			foreach($iRateDocuments as $iRateDocument): ?>
+			<li><i class="icon-arrow-right white"></i> <a href="/app/webroot/uploads/rates/<?php echo $iRateDocument['Rate']['documentFile'];?>" target="_blank"><?php echo $iRateDocument['Rate']['title'];?></a></li>
+<?php		endforeach; 
+		} else {
+			echo "<li><i class='icon-arrow-right white'></i> <a href='/rates'>View latest interest rate document here</a></li>";
+		}?>		            
+		</ul></div>
+<?php }?>        
+</div>
+<?php if($_SESSION['Auth']['User']['group_id']!=4) {?>
+<div style="clear: both; height: 0;" ></div>
+<div class="col" style="width: 630px; margin-right: 10px;">
+<?php if($_SESSION['Auth']['User']['group_id']<4){ ?>	
+	<h3><?php __('Unactioned Transactions');?></h3>
+    <div style="clear:both;display:block;height:30px">
+    	<?php
+		if($_SESSION['Auth']['User']['group_id']==1 || $_SESSION['Auth']['User']['group_id']==2){ //admin/shareholders
+			$jsString = "javascript:location.href='?group='+this.value;";
+			$brokers[0] = 'Select Broker';
+			foreach ($brokerOptions as $brokerOption){
+				$brokers[$brokerOption['Users']['id']] = $brokerOption['Users']['name'];
+			}
+			if (!isset($_GET['group'])) {
+				echo $this->Form->input('select_broker', array('label'=> '','type' => 'select','options' => $brokers,'onchange'=> $jsString));
+			} else {
+				$groupValue = $_GET['group'];
+				echo $this->Form->input('select_broker', array('label'=> '','type' => 'select','options' => $brokers,'onchange'=> $jsString,'default' => $groupValue));
+			}
+		} 
+		if($_SESSION['Auth']['User']['group_id']==3){ //brokers
+			$jsString = "javascript:location.href='?group='+this.value;";
+			$lenders[0] = 'Select Lenders';
+			foreach ($lenderOptions as $lenderOption){
+				$lenders[$lenderOption['ClaimsLender']['id']] = $lenderOption['ClaimsLender']['lender'];
+			}
+			if (!isset($_GET['group'])) {
+				echo $this->Form->input('select_lenders', array('label'=> '','type' => 'select','options' => $lenders,'onchange'=> $jsString));
+			} else {
+				$groupValue = $_GET['group'];
+				echo $this->Form->input('select_lenders', array('label'=> '','type' => 'select','options' => $lenders,'onchange'=> $jsString,'default' => $groupValue));
+			}
+		}
+		?>
+    </div>
+    <?php echo $this->CustomDisplayFunctions->displayQuickSearch(false,NULL); ?>
+    <div id="wrap-tabs">
+        <?php echo $this->CustomDisplayFunctions->displaySearchBox(false); ?>
+       <!-- <div class="menu-tab">
+            <span class="tab"><?php echo $this->Html->link(__('add new', true), array('action' => 'add')); ?></span>			
+        </div>
+        <div class="menu-tab">
+            <span class="tab-hi">display all </span>
+        </div>-->
+    </div>
+    <div id="clear"></div>
+    <div id="records">
+        <div id="record_header_wrap" style="background-color: #f5f5f5!important;">
+            <div style="width:30px" id="record_header">
+                <div class="record_detail_header" id="record_detail"><?php echo $this->Paginator->sort('id');?></div>
+            </div>
+            <div style="width:120px" id="record_header">
+                <div class="record_detail_header" id="record_detail"><?php echo $this->Paginator->sort('client');?></div>
+            </div>
+            <div style="width:150px" id="record_header">
+                <div class="record_detail_header" id="record_detail"><?php echo $this->Paginator->sort('lender');?></div>
+            </div>
+           <div style=" width:60px" id="record_header">
+            	<div class="record_detail_header" id="record_detail"><?php echo $this->Paginator->link('broker', array('sort' => 'claims_user_broker', 'direction' => 'asc'));?></div>
+            </div>
+             <div style="width:50px" id="record_header">
+                <div class="record_detail_header" id="record_detail" align="right" title="in months"><?php echo $this->Paginator->sort('terms');?></div>
+            </div>
+            <div style="width:70px" id="record_header">
+                <div class="record_detail_header" id="record_detail" align="right"><?php echo $this->Paginator->sort('amount');?></div>
+            </div>
+            <div style="width:90px" id="record_header">
+                <div class="record_detail_header" id="record_detail" align="right"><?php echo $this->Paginator->sort('settlement');?></div>
+            </div>
+        </div>
+    	<div id="paging_container" class="container">        
+            <ul id="claims" class="content">
+		<?php
+		if($claims){
+			$i = 0;
+			foreach ($claims as $claim):
+				$class = null;
+				if ($i++ % 2 == 0) {
+					$class = ' class="altrow-home"';
+				}
+				
+				foreach ($lenderOptions as $lenderOption){
+					if($lenderOption['ClaimsLender']['id']==$claim['Claim']['lender_id']){
+						$strLenderName = $lenderOption['ClaimsLender']['lender'];
+					}
+				}
+				
+				foreach ($brokerOptions as $brokerOption){
+					if($brokerOption['Users']['id']==$claim['Claim']['claims_user_broker']){
+						$strBrokerName = $brokerOption['Users']['name'];
+					}
+				}
+		?>
+        <div id="record_wrap" <?php echo $class;?>>
+            <div style="width:30px" id="record_row">
+                <div id="record_detail"><?php echo $claim['Claim']['id']; ?>&nbsp;</div>
+            </div>
+            <div style="width:120px" id="record_row">
+                <div id="record_detail" title="<?php echo $claim['Claim']['clientName'];?>"><?php 
+					$clientName = $claim['Claim']['clientName'];
+					if(strlen($clientName)>15){
+						$clientName = substr($clientName,0,15)."...";
+					}						 
+					if($claim['Claim']['actioned'] == 1){
+						if($_SESSION['Auth']['User']['group_id']==1){ 
+							echo $this->Html->link(__($clientName, true), array('action' => 'edit', $claim['Claim']['id'])); 
+						} else {
+							echo $clientName;
+						}
+					} else {
+						echo $this->Html->link(__($clientName, true), array('action' => 'edit', $claim['Claim']['id'])); 
+					}
+				?></div>
+            </div>
+            <div style="width:150px" id="record_row">
+                <div id="record_detail" title="<?php echo $strLenderName;?>"><?php echo (strlen($strLenderName)>20 ? substr($strLenderName, 0, 20)."..": $strLenderName); ?>&nbsp;</div>
+            </div>
+            <div style=" width:60px" id="record_row">
+                <div id="record_detail">
+				<?php if($_SESSION['Auth']['User']['group_id']<3){ //if not broker
+						echo $strBrokerName." ";
+					  } else { //if broker 
+					  	echo $_SESSION['Auth']['User']['name'];
+					  } ?>
+                </div>
+            </div>
+            <div style="width:50px" id="record_row">
+                <div id="record_detail" align="right" title="in months"><?php echo $claim['Claim']['terms']; ?>&nbsp;</div>
+            </div> 
+            <div style="width:70px" id="record_row">
+                <div id="record_detail" align="right"><?php echo "$ ".number_format($claim['Claim']['amount'],2); ?>&nbsp;</div>
+            </div>
+            <div style="width:90px" id="record_row">
+            	<div id="record_detail" align="right"><?php echo $this->FormatEpochToDate->formatEpochToDate($claim['Claim']['settlementDate']);?></div>
+            </div>
+            <div style="width:40px" id="record_row">
+            <?php if($_SESSION['Auth']['User']['group_id']==1){ //linked graphic
+					echo '<div id="record_option" class="imgPublish0">'.$this->Html->link($html->image("publish0.gif",array('id'=>'action','alt'=>'Mark as actioned?','title'=>'Mark as actioned?')), array('action' => 'publish', $claim['Claim']['id']), array('escape' => false,'id'=>'record','title'=>'Mark as actioned?'), sprintf(__('Are you sure you want to action this Transaction ID # %s?', true), $claim['Claim']['id'])).'</div>';
+				 } else {
+					  echo '<div id="record_option" class="imgPublish0">'.$html->image("publish0.gif",array('id'=>'action','alt'=>'Not yet actioned','title'=>'Not yet actioned.')).'</div>';
+				 } ?>
+            </div>
+        </div> 
+		<?php endforeach; ?>
+        
+        </ul>
+        <br clear="all" />
+        <div class="info_text"></div>
+        <div class="page_navigation"></div>
+    <?php
+		} else {
+			echo $this->CustomDisplayFunctions->displayNoClaimsDetails(true);
+		}
+	?>
+        </div>
+    </div>
+<?php } ?>    
+	</div>
+    <?php if($news){ ?>
+        <div class="col" style="width: 320px;"> <h3>Latest News</h3>
+        <?php	foreach ($news as $newsItem): ?>
+            <strong><?php echo $newsItem['News']['title'];?></strong> <br />
+            <?php echo $newsItem['News']['shortDescription'];?>
+            <p class="more"><a href="/news/view/<?php echo $newsItem['News']['id'];?>">MORE <i class="icon-circle-arrow-right"></i></a></p>
+        <?php endforeach; ?>
+        </div>
+<?php 	} 
+	} ?>   
+</div></div>

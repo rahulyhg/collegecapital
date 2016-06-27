@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+						<rss version="2.0">
+							<channel>
+								<title>Urban Property Australia</title>
+								<link>http://echo00/webdev.up/</link>
+								<description>Urban Property Australia - Leading Property Valuers, Advisers & Investors.</description>
+								<language>en-au</language>
+								<image>
+									<title>Urban Property Australia</title>
+									<url>http://echo00/webdev.up/images/logo.gif</url>
+									<link>http://echo00/webdev.up/</link>
+									<width>100</width>
+								</image><item>
+				<title>Landmark Classic Competition</title>
+				<link>http://echo00/webdev.up/latest-news/landmark-classic-competition</link>
+				<description><![CDATA[<p>
+	Thanks again to Codie and Natalie Law for sponsoring the major prize in the competition we ran during the Landmark Classic.</p>
+]]></description>
+				<pubDate>2012-02-08</pubDate>
+			</item><item>
+				<title>Lorem ipsum dolor sit amet</title>
+				<link>http://echo00/webdev.up/latest-news/lorem-ipsum-dolor-sit-amet</link>
+				<description><![CDATA[<p>
+	Consectetaur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud laboris.</p>
+]]></description>
+				<pubDate>2012-02-01</pubDate>
+			</item></channel>
+				</rss>
